@@ -1,0 +1,135 @@
+const express = require('express');
+const router = express.Router();
+const Project = require('../models/Project');
+const Task = require('../models/Task');
+const { protect, adminOnly } = require('../middleware/auth');
+
+// GET /api/projects — Admin: all, Employee: assigned only
+router.get('/', protect, async (req, res) => {
+  try {
+    let projects;
+    if (req.user.role === 'admin') {
+      const { status, priority, search } = req.query;
+      const filter = {};
+      if (status) filter.status = status;
+      if (priority) filter.priority = priority;
+      if (search) filter.name = { $regex: search, $options: 'i' };
+
+      projects = await Project.find(filter)
+        .populate('assignedEmployees.employee', 'name employeeId department')
+        .populate('createdBy', 'name')
+        .sort({ createdAt: -1 });
+    } else {
+      projects = await Project.find({
+        'assignedEmployees.employee': req.user._id,
+        status: { $ne: 'cancelled' }
+      })
+        .populate('assignedEmployees.employee', 'name employeeId')
+        .populate('createdBy', 'name')
+        .sort({ deadline: 1 });
+    }
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/projects — Admin only
+router.post('/', protect, adminOnly, async (req, res) => {
+  try {
+    const { name, description, client, department, startDate, deadline, priority, assignedEmployees } = req.body;
+
+    if (!name || !startDate || !deadline)
+      return res.status(400).json({ message: 'Name, start date and deadline are required' });
+
+    const project = await Project.create({
+      name,
+      description,
+      client,
+      department,
+      startDate,
+      deadline,
+      priority,
+      assignedEmployees: assignedEmployees || [],
+      createdBy: req.user._id
+    });
+
+    await project.populate('assignedEmployees.employee', 'name employeeId');
+    res.status(201).json({ message: 'Project created successfully', project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET /api/projects/:id
+router.get('/:id', protect, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id)
+      .populate('assignedEmployees.employee', 'name employeeId department designation')
+      .populate('createdBy', 'name');
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // Employees can only see their assigned projects
+    if (req.user.role === 'employee') {
+      const isAssigned = project.assignedEmployees.some(
+        ae => ae.employee._id.toString() === req.user._id.toString()
+      );
+      if (!isAssigned) return res.status(403).json({ message: 'Access denied' });
+    }
+
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/projects/:id — Admin only
+router.put('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { ...req.body },
+      { new: true, runValidators: true }
+    ).populate('assignedEmployees.employee', 'name employeeId');
+
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    res.json({ message: 'Project updated successfully', project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PATCH /api/projects/:id/status — Admin only
+router.patch('/:id/status', protect, adminOnly, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const project = await Project.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    res.json({ message: 'Status updated', project });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/projects/:id — Admin only
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    await Task.deleteMany({ project: req.params.id });
+    await project.deleteOne();
+
+    res.json({ message: 'Project deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;
