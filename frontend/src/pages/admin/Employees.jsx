@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getEmployees, createEmployee, updateEmployee, toggleEmployeeStatus, resetPassword } from '../../services/api';
+import { getEmployees, createEmployee, updateEmployee, toggleEmployeeStatus, resetPassword, deleteEmployee } from '../../services/api';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { formatDate, getInitials, avatarColor } from '../../utils/helpers';
 import toast from 'react-hot-toast';
-import { Plus, Search, Edit2, Power, KeyRound, Eye } from 'lucide-react';
+import { Plus, Search, Edit2, Power, KeyRound, Eye, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const emptyForm = {
@@ -24,6 +24,7 @@ export default function Employees() {
   const [saving, setSaving] = useState(false);
   const [resetModal, setResetModal] = useState(null);
   const [newPass, setNewPass] = useState('');
+  const [deleteModal, setDeleteModal] = useState(null);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -78,6 +79,17 @@ export default function Employees() {
       toast.success(`Employee ${emp.isActive ? 'deactivated' : 'activated'}`);
       load();
     } catch { toast.error('Failed to update status'); }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteEmployee(deleteModal._id);
+      toast.success(`${deleteModal.name} deleted permanently`);
+      setDeleteModal(null);
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Delete failed');
+    }
   };
 
   const handleResetPass = async () => {
@@ -162,6 +174,7 @@ export default function Employees() {
                         <button onClick={() => openEdit(emp)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600" title="Edit"><Edit2 className="w-4 h-4" /></button>
                         <button onClick={() => { setResetModal(emp); setNewPass(''); }} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-orange-600" title="Reset Password"><KeyRound className="w-4 h-4" /></button>
                         <button onClick={() => handleToggle(emp)} className={`p-1.5 rounded hover:bg-gray-100 ${emp.isActive ? 'text-gray-400 hover:text-red-500' : 'text-gray-400 hover:text-green-600'}`} title={emp.isActive ? 'Deactivate' : 'Activate'}><Power className="w-4 h-4" /></button>
+                        <button onClick={() => setDeleteModal(emp)} className="p-1.5 rounded hover:bg-red-50 text-gray-400 hover:text-red-600" title="Delete Employee"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -257,6 +270,34 @@ export default function Employees() {
           <div className="flex justify-end gap-3">
             <button onClick={() => setResetModal(null)} className="btn-secondary">Cancel</button>
             <button onClick={handleResetPass} className="btn-primary">Reset Password</button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={!!deleteModal} onClose={() => setDeleteModal(null)} title="Delete Employee" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 bg-red-50 rounded-lg border border-red-100">
+            <Trash2 className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium text-red-800">This action is permanent</p>
+              <p className="text-sm text-red-600 mt-0.5">
+                Deleting <strong>{deleteModal?.name}</strong> ({deleteModal?.employeeId}) will permanently remove their account. This cannot be undone.
+              </p>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500">
+            Consider <strong>deactivating</strong> instead if you want to preserve their work history.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button onClick={() => setDeleteModal(null)} className="btn-secondary">Cancel</button>
+            <button
+              onClick={handleDelete}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Permanently
+            </button>
           </div>
         </div>
       </Modal>

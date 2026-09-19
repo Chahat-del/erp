@@ -156,4 +156,18 @@ router.patch('/:id/reset-password', protect, adminOnly, async (req, res) => {
   }
 });
 
+// DELETE /api/employees/:id — Admin: permanently delete employee
+router.delete('/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const employee = await User.findById(req.params.id);
+    if (!employee) return res.status(404).json({ message: 'Employee not found' });
+    if (employee.role === 'admin') return res.status(403).json({ message: 'Cannot delete admin account' });
+
+    await employee.deleteOne();
+    res.json({ message: `Employee ${employee.name} deleted permanently` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

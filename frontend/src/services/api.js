@@ -37,6 +37,7 @@ export const getEmployee = (id) => api.get(`/employees/${id}`);
 export const updateEmployee = (id, data) => api.put(`/employees/${id}`, data);
 export const toggleEmployeeStatus = (id) => api.patch(`/employees/${id}/toggle-status`);
 export const resetPassword = (id, data) => api.patch(`/employees/${id}/reset-password`, data);
+export const deleteEmployee = (id) => api.delete(`/employees/${id}`);
 
 // Projects
 export const getProjects = (params) => api.get('/projects', { params });
