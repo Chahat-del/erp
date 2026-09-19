@@ -39,45 +39,47 @@ export default function EmployeeDashboard() {
   };
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{greeting()}, {user?.name?.split(' ')[0]}! 👋</h1>
-        <p className="text-gray-500 text-sm mt-0.5">
-          {user?.employeeId} · {user?.department} · {user?.designation}
+    <div className="p-4 lg:p-8">
+      <div className="mb-4">
+        <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{greeting()}, {user?.name?.split(' ')[0]}! 👋</h1>
+        <p className="text-gray-500 text-xs lg:text-sm mt-0.5 flex flex-wrap gap-1">
+          {user?.employeeId && <span>{user.employeeId}</span>}
+          {user?.department && <><span>·</span><span>{user.department}</span></>}
+          {user?.designation && <><span>·</span><span>{user.designation}</span></>}
         </p>
       </div>
 
       {/* Today's report alert */}
       {!stats.todayReportSubmitted && (
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0" />
             <div>
-              <p className="font-medium text-orange-800">Daily report not submitted yet</p>
-              <p className="text-sm text-orange-600">Don't forget to submit today's work report.</p>
+              <p className="font-medium text-orange-800 text-sm">Daily report not submitted yet</p>
+              <p className="text-xs text-orange-600">Don't forget to submit today's work report.</p>
             </div>
           </div>
-          <Link to="/employee/reports" className="btn-primary text-sm flex-shrink-0">
+          <Link to="/employee/reports" className="btn-primary text-sm self-start sm:self-auto flex-shrink-0">
             Submit Now
           </Link>
         </div>
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4 lg:mb-6">
         <StatCard title="My Projects" value={stats.totalProjects} icon={FolderKanban} color="blue" />
-        <StatCard title="Tasks In Progress" value={stats.inProgressTasks} icon={TrendingUp} color="indigo" />
+        <StatCard title="In Progress" value={stats.inProgressTasks} icon={TrendingUp} color="indigo" />
         <StatCard title="Pending Tasks" value={stats.pendingTasks} icon={Clock} color="yellow" />
-        <StatCard title="Completed Tasks" value={stats.completedTasks} icon={CheckSquare} color="green" />
+        <StatCard title="Completed" value={stats.completedTasks} icon={CheckSquare} color="green" />
         <StatCard title="Weekly Hours" value={`${stats.weeklyHours}h`} icon={Clock} color="purple" subtitle="Last 7 days" />
-        <StatCard title="Reports Submitted" value={stats.totalReports} icon={FileText} color="teal" />
-        <StatCard title="Overdue Tasks" value={stats.overdueTasksCount} icon={AlertCircle} color="red" />
+        <StatCard title="Reports" value={stats.totalReports} icon={FileText} color="teal" />
+        <StatCard title="Overdue" value={stats.overdueTasksCount} icon={AlertCircle} color="red" />
         <StatCard title="Today's Report" value={stats.todayReportSubmitted ? '✓ Done' : '✗ Missing'} icon={FileText} color={stats.todayReportSubmitted ? 'green' : 'orange'} />
       </div>
 
       {/* Task trend */}
       {trendData.length > 0 && (
-        <div className="card mb-6">
+        <div className="card mb-4 lg:mb-6">
           <h3 className="font-semibold text-gray-900 mb-4">Tasks Completed (Last 30 Days)</h3>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={trendData}>
@@ -91,7 +93,7 @@ export default function EmployeeDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* My Projects */}
         <div className="card">
           <div className="flex items-center justify-between mb-4">
@@ -151,7 +153,26 @@ export default function EmployeeDashboard() {
               <Plus className="w-3.5 h-3.5" /> New Report
             </Link>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Mobile: card list */}
+          <div className="lg:hidden space-y-2">
+            {recentReports.length === 0 && <p className="text-gray-400 text-sm text-center py-4">No reports yet</p>}
+            {recentReports.map(r => (
+              <div key={r._id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0 gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{r.project?.name}</p>
+                  <p className="text-xs text-gray-400">{formatDate(r.date)} · {r.hoursWorked}h</p>
+                </div>
+                <div className="flex gap-1.5 flex-shrink-0">
+                  <span className={`badge-${r.status === 'completed' ? 'green' : r.status === 'blocked' ? 'red' : 'blue'}`}>{r.status}</span>
+                  {r.adminReview?.reviewed ? <span className="badge-green">✓</span> : <span className="badge-yellow">…</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop: table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-gray-400 border-b border-gray-100">
@@ -183,3 +204,5 @@ export default function EmployeeDashboard() {
     </div>
   );
 }
+
+

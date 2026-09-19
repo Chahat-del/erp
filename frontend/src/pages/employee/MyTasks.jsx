@@ -67,30 +67,35 @@ export default function MyTasks() {
   ];
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader title="My Tasks" subtitle={`${tasks.length} tasks assigned`} />
 
       {/* Filters */}
-      <div className="card mb-6">
-        <div className="flex flex-wrap gap-3 items-center">
-          <Filter className="w-4 h-4 text-gray-400" />
-          <select className="input w-40" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="">All Status</option>
-            <option value="todo">Todo</option>
-            <option value="in-progress">In Progress</option>
-            <option value="review">Review</option>
-            <option value="completed">Completed</option>
-          </select>
-          <select className="input w-40" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
-            <option value="">All Priority</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-            <option value="critical">Critical</option>
-          </select>
-          {(filterStatus || filterPriority) && (
-            <button onClick={() => { setFilterStatus(''); setFilterPriority(''); }} className="btn-secondary text-sm">Clear</button>
-          )}
+      <div className="card mb-4 lg:mb-6">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center">
+          <div className="flex items-center gap-2 text-gray-400">
+            <Filter className="w-4 h-4" />
+            <span className="text-sm font-medium text-gray-500">Filter</span>
+          </div>
+          <div className="flex flex-wrap gap-3 flex-1">
+            <select className="input w-full sm:w-36" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="todo">Todo</option>
+              <option value="in-progress">In Progress</option>
+              <option value="review">Review</option>
+              <option value="completed">Completed</option>
+            </select>
+            <select className="input w-full sm:w-36" value={filterPriority} onChange={e => setFilterPriority(e.target.value)}>
+              <option value="">All Priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+            {(filterStatus || filterPriority) && (
+              <button onClick={() => { setFilterStatus(''); setFilterPriority(''); }} className="btn-secondary text-sm">Clear</button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -107,33 +112,30 @@ export default function MyTasks() {
                 </div>
                 <div className="space-y-2">
                   {group.map(task => (
-                    <div key={task._id} className={`border rounded-xl p-4 ${bg} hover:shadow-sm transition-shadow`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${priorityDot(task.priority)}`} />
-                            <h4 className="font-medium text-gray-900">{task.title}</h4>
-                          </div>
-                          {task.description && (
-                            <p className="text-sm text-gray-500 mb-2 line-clamp-1">{task.description}</p>
-                          )}
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                            <span>📁 {task.project?.name}</span>
-                            <span>📅 Due: {formatDate(task.dueDate)}</span>
-                            <span>🕐 Est: {task.estimatedHours || 0}h</span>
-                            {task.actualHours > 0 && <span>✅ Actual: {task.actualHours}h</span>}
-                            <span className="font-mono text-gray-400">{task.taskId}</span>
-                          </div>
+                    <div key={task._id} className={`border rounded-xl p-3 lg:p-4 ${bg} hover:shadow-sm transition-shadow`}>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${priorityDot(task.priority)}`} />
+                          <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={priorityColor(task.priority)}>{task.priority}</span>
-                          <button
-                            onClick={() => openUpdate(task)}
-                            className="btn-secondary text-xs py-1 px-2.5"
-                          >
-                            Update
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => openUpdate(task)}
+                          className="btn-secondary text-xs py-1 px-2.5 flex-shrink-0"
+                        >
+                          Update
+                        </button>
+                      </div>
+                      {task.description && (
+                        <p className="text-xs text-gray-500 mb-2 line-clamp-1 ml-4">{task.description}</p>
+                      )}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 ml-4">
+                        <span>📁 {task.project?.name}</span>
+                        <span>📅 {formatDate(task.dueDate)}</span>
+                        <span>🕐 {task.estimatedHours || 0}h est.</span>
+                        {task.actualHours > 0 && <span>✅ {task.actualHours}h actual</span>}
+                      </div>
+                      <div className="mt-2 ml-4">
+                        <span className={priorityColor(task.priority)}>{task.priority}</span>
                       </div>
                     </div>
                   ))}
@@ -188,3 +190,5 @@ export default function MyTasks() {
     </div>
   );
 }
+
+

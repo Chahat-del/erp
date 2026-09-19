@@ -99,7 +99,7 @@ export default function DailyReports() {
   const todayReport = reports.find(r => r.date?.slice(0, 10) === today);
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader
         title="Daily Reports"
         subtitle="Submit your daily work report"
@@ -111,23 +111,23 @@ export default function DailyReports() {
       />
 
       {/* Today status banner */}
-      <div className={`flex items-center gap-3 p-4 rounded-xl mb-6 ${todayReport ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
+      <div className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl mb-4 lg:mb-6 ${todayReport ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'}`}>
         {todayReport ? (
           <>
-            <CheckCircle className="w-5 h-5 text-green-500" />
+            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
             <div>
-              <p className="font-medium text-green-800">Today's report submitted ✓</p>
-              <p className="text-sm text-green-600">{todayReport.project?.name} · {todayReport.hoursWorked}h worked</p>
+              <p className="font-medium text-green-800 text-sm">Today's report submitted ✓</p>
+              <p className="text-xs text-green-600">{todayReport.project?.name} · {todayReport.hoursWorked}h worked</p>
             </div>
           </>
         ) : (
           <>
-            <AlertCircle className="w-5 h-5 text-orange-500" />
-            <div>
-              <p className="font-medium text-orange-800">No report submitted for today</p>
-              <p className="text-sm text-orange-600">Please submit your daily work report before end of day.</p>
+            <AlertCircle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-orange-800 text-sm">No report submitted for today</p>
+              <p className="text-xs text-orange-600">Please submit your daily report before end of day.</p>
             </div>
-            <button onClick={openAdd} className="ml-auto btn-primary text-sm">Submit Now</button>
+            <button onClick={openAdd} className="btn-primary text-sm self-start sm:self-auto flex-shrink-0">Submit Now</button>
           </>
         )}
       </div>
@@ -139,32 +139,32 @@ export default function DailyReports() {
           )}
           {reports.map(r => (
             <div key={r._id} className="card hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <p className="font-semibold text-gray-900">{formatDate(r.date)}</p>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                    <p className="font-semibold text-gray-900 text-sm">{formatDate(r.date)}</p>
                     <span className={`badge-${r.status === 'completed' ? 'green' : r.status === 'blocked' ? 'red' : r.status === 'in-progress' ? 'blue' : 'yellow'}`}>
                       {r.status}
                     </span>
                     {r.adminReview?.reviewed
                       ? <span className="badge-green flex items-center gap-1"><CheckCircle className="w-3 h-3" />Reviewed</span>
-                      : <span className="badge-yellow flex items-center gap-1"><Clock className="w-3 h-3" />Pending review</span>
+                      : <span className="badge-yellow flex items-center gap-1"><Clock className="w-3 h-3" />Pending</span>
                     }
                   </div>
                   <p className="text-sm text-gray-600 mb-1">
                     <span className="font-medium">{r.project?.name}</span> · {r.hoursWorked}h worked
                   </p>
-                  <p className="text-sm text-gray-500 line-clamp-1">{r.workDescription}</p>
+                  <p className="text-xs text-gray-500 line-clamp-1">{r.workDescription}</p>
                   {r.blockers && r.blockers !== 'None' && (
-                    <p className="text-xs text-red-500 mt-1">🚫 Blocker: {r.blockers}</p>
+                    <p className="text-xs text-red-500 mt-1">🚫 {r.blockers}</p>
                   )}
                   {r.adminReview?.reviewed && r.adminReview?.comment && (
-                    <p className="text-xs text-blue-600 mt-1 bg-blue-50 rounded px-2 py-1">
-                      💬 Admin: {r.adminReview.comment}
+                    <p className="text-xs text-blue-600 mt-1 bg-blue-50 rounded px-2 py-1 line-clamp-1">
+                      💬 {r.adminReview.comment}
                     </p>
                   )}
                 </div>
-                <div className="flex gap-1 ml-4">
+                <div className="flex gap-1 flex-shrink-0">
                   <button onClick={() => setViewModal(r)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
                     <Eye className="w-4 h-4" />
                   </button>
@@ -183,7 +183,7 @@ export default function DailyReports() {
       {/* Submit/Edit Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editReport ? 'Edit Report' : 'Submit Daily Report'} size="lg">
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Date</label>
               <input type="date" className="input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
@@ -259,7 +259,7 @@ export default function DailyReports() {
       <Modal isOpen={!!viewModal} onClose={() => setViewModal(null)} title="Report Details" size="lg">
         {viewModal && (
           <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div><span className="text-gray-400">Date:</span> <strong>{formatDate(viewModal.date)}</strong></div>
               <div><span className="text-gray-400">Project:</span> <strong>{viewModal.project?.name}</strong></div>
               <div><span className="text-gray-400">Hours Worked:</span> <strong>{viewModal.hoursWorked}h</strong></div>
@@ -293,3 +293,5 @@ export default function DailyReports() {
     </div>
   );
 }
+
+

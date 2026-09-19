@@ -32,17 +32,17 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-600/30">
-            <Building2 className="w-8 h-8 text-white" />
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-2xl mb-3 shadow-lg shadow-blue-600/30">
+            <Building2 className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">MG Solutions</h1>
+          <h1 className="text-2xl lg:text-3xl font-bold text-white tracking-tight">MG Solutions</h1>
           <p className="text-gray-400 mt-1 text-sm">Employee & Project Management</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Sign in to your account</h2>
+        <div className="bg-white rounded-2xl shadow-2xl p-6 lg:p-8">
+          <h2 className="text-lg lg:text-xl font-semibold text-gray-900 mb-5">Sign in to your account</h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="label flex items-center gap-1.5">

@@ -12,15 +12,15 @@ export default function StatCard({ title, value, icon: Icon, color = 'blue', sub
 
   return (
     <div className="card hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value ?? '-'}</p>
-          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-xs lg:text-sm font-medium text-gray-500 truncate">{title}</p>
+          <p className="text-xl lg:text-3xl font-bold text-gray-900 mt-0.5 lg:mt-1 leading-tight">{value ?? '-'}</p>
+          {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
         </div>
         {Icon && (
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colorMap[color]}`}>
-            <Icon className="w-6 h-6" />
+          <div className={`w-9 h-9 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${colorMap[color]}`}>
+            <Icon className="w-4 h-4 lg:w-6 lg:h-6" />
           </div>
         )}
       </div>

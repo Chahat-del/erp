@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getReports, getMissingReports, reviewReport, getEmployees, getProjects } from '../../services/api';
+import { getReports, getMissingReports, reviewReport, getEmployees } from '../../services/api';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
@@ -11,7 +11,6 @@ export default function Reports() {
   const [reports, setReports] = useState([]);
   const [missing, setMissing] = useState([]);
   const [employees, setEmployees] = useState([]);
-  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('all');
   const [viewReport, setViewReport] = useState(null);
@@ -26,16 +25,14 @@ export default function Reports() {
       const params = {};
       if (filterEmp) params.employeeId = filterEmp;
       if (filterDate) params.date = filterDate;
-      const [rRes, mRes, eRes, pRes] = await Promise.all([
+      const [rRes, mRes, eRes] = await Promise.all([
         getReports(params),
         getMissingReports(),
         getEmployees({ isActive: 'true' }),
-        getProjects()
       ]);
       setReports(rRes.data);
       setMissing(mRes.data);
       setEmployees(eRes.data);
-      setProjects(pRes.data);
     } catch { toast.error('Failed to load'); }
     finally { setLoading(false); }
   };
@@ -53,18 +50,29 @@ export default function Reports() {
   };
 
   const filtered = reports.filter(r =>
-    !search || r.employee?.name?.toLowerCase().includes(search.toLowerCase()) || r.project?.name?.toLowerCase().includes(search.toLowerCase())
+    !search ||
+    r.employee?.name?.toLowerCase().includes(search.toLowerCase()) ||
+    r.project?.name?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const statusBadge = (status) => {
+    if (status === 'completed') return 'badge-green';
+    if (status === 'blocked') return 'badge-red';
+    if (status === 'in-progress') return 'badge-blue';
+    return 'badge-yellow';
+  };
+
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader title="Daily Reports" subtitle="Employee work reports" />
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-full sm:w-fit overflow-x-auto">
         {['all', 'missing'].map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors capitalize ${tab === t ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 sm:flex-none px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+              tab === t ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}>
             {t === 'all' ? `All Reports (${reports.length})` : `Missing Today (${missing.length})`}
           </button>
         ))}
@@ -73,22 +81,22 @@ export default function Reports() {
       {tab === 'missing' ? (
         <div className="card">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-orange-500" />
-            <h3 className="font-semibold text-gray-900">Employees who haven't submitted today's report</h3>
+            <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+            <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Employees who haven't submitted today's report</h3>
           </div>
           {missing.length === 0 ? (
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="w-5 h-5" />
-              <span>All employees have submitted today's report!</span>
+              <span className="text-sm">All employees have submitted today's report!</span>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {missing.map(e => (
                 <div key={e._id} className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
                   <AlertTriangle className="w-4 h-4 text-orange-500 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{e.name}</p>
-                    <p className="text-xs text-gray-500">{e.employeeId} · {e.department}</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-gray-900 text-sm truncate">{e.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{e.employeeId} · {e.department}</p>
                   </div>
                 </div>
               ))}
@@ -97,63 +105,102 @@ export default function Reports() {
         </div>
       ) : (
         <>
-          <div className="card mb-6">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
+          {/* Filters */}
+          <div className="card mb-4">
+            <div className="flex flex-col gap-3">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input className="input pl-9" placeholder="Search by employee or project..." value={search} onChange={e => setSearch(e.target.value)} />
+                <input className="input pl-9" placeholder="Search employee or project..." value={search} onChange={e => setSearch(e.target.value)} />
               </div>
-              <select className="input sm:w-48" value={filterEmp} onChange={e => setFilterEmp(e.target.value)}>
-                <option value="">All Employees</option>
-                {employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
-              </select>
-              <input type="date" className="input sm:w-44" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+              <div className="flex gap-3">
+                <select className="input flex-1" value={filterEmp} onChange={e => setFilterEmp(e.target.value)}>
+                  <option value="">All Employees</option>
+                  {employees.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                </select>
+                <input type="date" className="input flex-1" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+              </div>
             </div>
           </div>
 
           {loading ? <LoadingSpinner /> : (
-            <div className="card overflow-hidden p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Employee</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Project</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Date</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Hours</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
-                      <th className="text-left px-4 py-3 font-medium text-gray-500">Reviewed</th>
-                      <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.length === 0 && <tr><td colSpan={7} className="text-center py-12 text-gray-400">No reports found</td></tr>}
-                    {filtered.map(r => (
-                      <tr key={r._id} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{r.employee?.name}</p>
-                          <p className="text-xs text-gray-400">{r.employee?.employeeId}</p>
-                        </td>
-                        <td className="px-4 py-3 text-gray-600">{r.project?.name}</td>
-                        <td className="px-4 py-3 text-gray-600">{formatDate(r.date)}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{r.hoursWorked}h</td>
-                        <td className="px-4 py-3">
-                          <span className={`badge-${r.status === 'completed' ? 'green' : r.status === 'blocked' ? 'red' : r.status === 'in-progress' ? 'blue' : 'yellow'}`}>{r.status}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {r.adminReview?.reviewed ? <span className="badge-green">Reviewed</span> : <span className="badge-yellow flex items-center gap-1 w-fit"><Clock className="w-3 h-3" />Pending</span>}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button onClick={() => { setViewReport(r); setReviewComment(r.adminReview?.comment || ''); }} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <>
+              {/* Mobile card list */}
+              <div className="lg:hidden space-y-3">
+                {filtered.length === 0 && <div className="card text-center text-gray-400 py-10">No reports found</div>}
+                {filtered.map(r => (
+                  <div key={r._id} className="card">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900">{r.employee?.name}</p>
+                        <p className="text-xs text-gray-400">{r.employee?.employeeId}</p>
+                      </div>
+                      <button
+                        onClick={() => { setViewReport(r); setReviewComment(r.adminReview?.comment || ''); }}
+                        className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-blue-600 flex-shrink-0"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 text-xs text-gray-500 mb-2">
+                      <div><span className="text-gray-400">Project: </span><span className="font-medium text-gray-700">{r.project?.name}</span></div>
+                      <div><span className="text-gray-400">Date: </span>{formatDate(r.date)}</div>
+                      <div><span className="text-gray-400">Hours: </span><span className="font-semibold text-gray-900">{r.hoursWorked}h</span></div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={statusBadge(r.status)}>{r.status}</span>
+                      {r.adminReview?.reviewed
+                        ? <span className="badge-green">Reviewed</span>
+                        : <span className="badge-yellow flex items-center gap-1"><Clock className="w-3 h-3" />Pending</span>
+                      }
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+
+              {/* Desktop table */}
+              <div className="hidden lg:block card overflow-hidden p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Employee</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Project</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Date</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Hours</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
+                        <th className="text-left px-4 py-3 font-medium text-gray-500">Reviewed</th>
+                        <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.length === 0 && <tr><td colSpan={7} className="text-center py-12 text-gray-400">No reports found</td></tr>}
+                      {filtered.map(r => (
+                        <tr key={r._id} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-gray-900">{r.employee?.name}</p>
+                            <p className="text-xs text-gray-400">{r.employee?.employeeId}</p>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{r.project?.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{formatDate(r.date)}</td>
+                          <td className="px-4 py-3 font-medium text-gray-900">{r.hoursWorked}h</td>
+                          <td className="px-4 py-3"><span className={statusBadge(r.status)}>{r.status}</span></td>
+                          <td className="px-4 py-3">
+                            {r.adminReview?.reviewed
+                              ? <span className="badge-green">Reviewed</span>
+                              : <span className="badge-yellow flex items-center gap-1 w-fit"><Clock className="w-3 h-3" />Pending</span>}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => { setViewReport(r); setReviewComment(r.adminReview?.comment || ''); }} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
         </>
       )}
@@ -162,40 +209,35 @@ export default function Reports() {
       <Modal isOpen={!!viewReport} onClose={() => setViewReport(null)} title="Daily Report Detail" size="lg">
         {viewReport && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><span className="text-gray-400">Employee:</span> <span className="font-medium">{viewReport.employee?.name}</span></div>
-              <div><span className="text-gray-400">Date:</span> <span className="font-medium">{formatDate(viewReport.date)}</span></div>
-              <div><span className="text-gray-400">Project:</span> <span className="font-medium">{viewReport.project?.name}</span></div>
-              <div><span className="text-gray-400">Hours Worked:</span> <span className="font-medium">{viewReport.hoursWorked}h</span></div>
-              <div><span className="text-gray-400">Status:</span> <span className="font-medium capitalize">{viewReport.status}</span></div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><span className="text-gray-400 text-xs block">Employee</span><span className="font-medium">{viewReport.employee?.name}</span></div>
+              <div><span className="text-gray-400 text-xs block">Date</span><span className="font-medium">{formatDate(viewReport.date)}</span></div>
+              <div><span className="text-gray-400 text-xs block">Project</span><span className="font-medium">{viewReport.project?.name}</span></div>
+              <div><span className="text-gray-400 text-xs block">Hours Worked</span><span className="font-medium">{viewReport.hoursWorked}h</span></div>
+              <div><span className="text-gray-400 text-xs block">Status</span><span className="font-medium capitalize">{viewReport.status}</span></div>
             </div>
-
-            <div className="border-t pt-4">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Work Done</p>
-              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{viewReport.workDescription}</p>
+            <div className="border-t pt-3">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Work Done</p>
+              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{viewReport.workDescription}</p>
             </div>
-
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Blockers</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Blockers</p>
               <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{viewReport.blockers || 'None'}</p>
             </div>
-
             <div>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Next Day Plan</p>
-              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{viewReport.nextDayPlan}</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Next Day Plan</p>
+              <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">{viewReport.nextDayPlan}</p>
             </div>
-
-            <div className="border-t pt-4">
+            <div className="border-t pt-3">
               <label className="label">Admin Review Comment</label>
               <textarea className="input" rows={3} placeholder="Add a review comment..." value={reviewComment} onChange={e => setReviewComment(e.target.value)} />
               {viewReport.adminReview?.reviewed && (
                 <p className="text-xs text-gray-400 mt-1">Last reviewed: {formatDateTime(viewReport.adminReview.reviewedAt)}</p>
               )}
             </div>
-
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button onClick={() => setViewReport(null)} className="btn-secondary">Close</button>
-              <button onClick={handleReview} className="btn-primary flex items-center gap-2">
+              <button onClick={handleReview} className="btn-primary flex items-center justify-center gap-2">
                 <CheckCircle className="w-4 h-4" />
                 {viewReport.adminReview?.reviewed ? 'Update Review' : 'Mark as Reviewed'}
               </button>

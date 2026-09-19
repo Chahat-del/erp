@@ -89,14 +89,14 @@ export default function Projects() {
   };
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader
         title="Projects"
         subtitle={`${projects.length} projects`}
         action={<button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />New Project</button>}
       />
 
-      <div className="card mb-6">
+      <div className="card mb-4 lg:mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -169,8 +169,8 @@ export default function Projects() {
       {/* Add/Edit Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editProject ? 'Edit Project' : 'New Project'} size="xl">
         <form onSubmit={handleSave} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="sm:col-span-2">
               <label className="label">Project Name *</label>
               <input className="input" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             </div>
@@ -261,3 +261,5 @@ export default function Projects() {
     </div>
   );
 }
+
+

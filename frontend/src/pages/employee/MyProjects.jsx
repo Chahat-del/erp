@@ -34,7 +34,7 @@ export default function MyProjects() {
   if (loading) return <LoadingSpinner fullPage />;
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader title="My Projects" subtitle={`${projects.length} assigned projects`} />
 
       {projects.length === 0 ? (
@@ -51,17 +51,17 @@ export default function MyProjects() {
 
             return (
               <div key={p._id} className="card hover:shadow-md transition-shadow">
-                <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <div className="flex flex-wrap items-center gap-1.5 mb-1">
                       <span className="font-mono text-xs text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{p.projectId}</span>
                       <span className={priorityColor(p.priority)}>{p.priority}</span>
                       <span className="badge-purple capitalize">{myRole}</span>
                     </div>
-                    <h3 className="font-semibold text-gray-900">{p.name}</h3>
+                    <h3 className="font-semibold text-gray-900 text-sm">{p.name}</h3>
                     {p.client && <p className="text-xs text-gray-400 mt-0.5">Client: {p.client}</p>}
                   </div>
-                  <span className={`${statusColor(p.status)} ml-2`}>{p.status}</span>
+                  <span className={`${statusColor(p.status)} flex-shrink-0 mt-1`}>{p.status}</span>
                 </div>
 
                 {p.description && (
@@ -117,3 +117,4 @@ export default function MyProjects() {
     </div>
   );
 }
+

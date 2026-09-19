@@ -89,14 +89,14 @@ export default function Tasks() {
   const now = new Date();
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader
         title="Tasks"
         subtitle={`${tasks.length} tasks`}
         action={<button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />New Task</button>}
       />
 
-      <div className="card mb-6">
+      <div className="card mb-4 lg:mb-6">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -118,65 +118,107 @@ export default function Tasks() {
       </div>
 
       {loading ? <LoadingSpinner /> : (
-        <div className="card overflow-hidden p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Task</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Project</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Assigned To</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Priority</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Due Date</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-12 text-gray-400">No tasks found</td></tr>
-                )}
-                {filtered.map(t => {
-                  const overdue = new Date(t.dueDate) < now && t.status !== 'completed' && t.status !== 'cancelled';
-                  return (
-                    <tr key={t._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${priorityDot(t.priority)}`} />
-                          <div>
-                            <p className="font-medium text-gray-900">{t.title}</p>
-                            <p className="text-xs text-gray-400 font-mono">{t.taskId}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{t.project?.name || '-'}</td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="text-gray-700">{t.assignedTo?.name}</p>
-                          <p className="text-xs text-gray-400">{t.assignedTo?.employeeId}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3"><span className={priorityColor(t.priority)}>{t.priority}</span></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          {overdue && <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
-                          <span className={overdue ? 'text-red-500 font-medium' : 'text-gray-600'}>{formatDate(t.dueDate)}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3"><span className={statusColor(t.status)}>{t.status}</span></td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openEdit(t)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => handleDelete(t._id)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <>
+          {/* Mobile card list */}
+          <div className="lg:hidden space-y-3">
+            {filtered.length === 0 && (
+              <div className="card text-center text-gray-400 py-10">No tasks found</div>
+            )}
+            {filtered.map(t => {
+              const overdue = new Date(t.dueDate) < now && t.status !== 'completed' && t.status !== 'cancelled';
+              return (
+                <div key={t._id} className="card">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1 ${priorityDot(t.priority)}`} />
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 text-sm truncate">{t.title}</p>
+                        <p className="text-xs text-gray-400 font-mono">{t.taskId}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      <button onClick={() => openEdit(t)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => handleDelete(t._id)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-xs text-gray-500 mb-2">
+                    <div><span className="text-gray-400">Project: </span>{t.project?.name || '-'}</div>
+                    <div><span className="text-gray-400">Assignee: </span>{t.assignedTo?.name || '-'}</div>
+                    <div className="flex items-center gap-1">
+                      {overdue && <AlertCircle className="w-3 h-3 text-red-500" />}
+                      <span className={overdue ? 'text-red-500 font-medium' : ''}>Due: {formatDate(t.dueDate)}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className={priorityColor(t.priority)}>{t.priority}</span>
+                    <span className={statusColor(t.status)}>{t.status}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+
+          {/* Desktop table */}
+          <div className="hidden lg:block card overflow-hidden p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Task</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Project</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Assigned To</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Priority</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Due Date</th>
+                    <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
+                    <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.length === 0 && (
+                    <tr><td colSpan={7} className="text-center py-12 text-gray-400">No tasks found</td></tr>
+                  )}
+                  {filtered.map(t => {
+                    const overdue = new Date(t.dueDate) < now && t.status !== 'completed' && t.status !== 'cancelled';
+                    return (
+                      <tr key={t._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${priorityDot(t.priority)}`} />
+                            <div>
+                              <p className="font-medium text-gray-900">{t.title}</p>
+                              <p className="text-xs text-gray-400 font-mono">{t.taskId}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">{t.project?.name || '-'}</td>
+                        <td className="px-4 py-3">
+                          <div>
+                            <p className="text-gray-700">{t.assignedTo?.name}</p>
+                            <p className="text-xs text-gray-400">{t.assignedTo?.employeeId}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3"><span className={priorityColor(t.priority)}>{t.priority}</span></td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            {overdue && <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
+                            <span className={overdue ? 'text-red-500 font-medium' : 'text-gray-600'}>{formatDate(t.dueDate)}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3"><span className={statusColor(t.status)}>{t.status}</span></td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button onClick={() => openEdit(t)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
+                            <button onClick={() => handleDelete(t._id)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editTask ? 'Edit Task' : 'New Task'} size="lg">
@@ -185,7 +227,7 @@ export default function Tasks() {
             <label className="label">Task Title *</label>
             <input className="input" required value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Project *</label>
               <select className="input" required value={form.project} onChange={e => setForm({ ...form, project: e.target.value })}>
@@ -243,3 +285,5 @@ export default function Tasks() {
     </div>
   );
 }
+
+

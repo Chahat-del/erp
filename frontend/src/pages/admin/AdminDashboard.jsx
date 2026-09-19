@@ -39,14 +39,14 @@ export default function AdminDashboard() {
   const deptData = deptStats.map(d => ({ name: d._id || 'N/A', value: d.count }));
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 lg:p-8">
       <PageHeader
         title="Admin Dashboard"
         subtitle="MG Solutions — Overview"
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8">
         <StatCard title="Total Employees" value={stats.totalEmployees} icon={Users} color="blue" subtitle={`${stats.activeEmployees} active`} />
         <StatCard title="Active Projects" value={stats.activeProjects} icon={FolderKanban} color="green" subtitle={`${stats.totalProjects} total`} />
         <StatCard title="Total Tasks" value={stats.totalTasks} icon={CheckSquare} color="purple" subtitle={`${stats.completedTasks} completed`} />
@@ -58,15 +58,15 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
         {/* Tasks by Month */}
         <div className="card lg:col-span-2">
-          <h3 className="font-semibold text-gray-900 mb-4">Tasks Completed (Last 6 Months)</h3>
-          <ResponsiveContainer width="100%" height={220}>
+          <h3 className="font-semibold text-gray-900 mb-3 text-sm lg:text-base">Tasks Completed (Last 6 Months)</h3>
+          <ResponsiveContainer width="100%" height={200}>
             <BarChart data={taskMonthData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} width={28} />
               <Tooltip />
               <Bar dataKey="tasks" fill="#3b82f6" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
 
       {/* Hours Per Day */}
       {hoursPerDay.length > 0 && (
-        <div className="card mb-8">
+        <div className="card mb-5 lg:mb-8">
           <h3 className="font-semibold text-gray-900 mb-4">Team Hours Logged (Last 7 Days)</h3>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={hoursPerDay}>
@@ -108,7 +108,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         {/* Recent Projects */}
         <div className="card">
           <h3 className="font-semibold text-gray-900 mb-4">Recent Projects</h3>
@@ -156,3 +156,6 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+
+
