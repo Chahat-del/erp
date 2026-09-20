@@ -117,6 +117,46 @@ router.patch('/:id/status', protect, adminOnly, async (req, res) => {
   }
 });
 
+// PATCH /api/projects/:id/progress — Employee: update completion % of assigned project
+router.patch('/:id/progress', protect, async (req, res) => {
+  try {
+    const { completionPercentage, workNote } = req.body;
+
+    if (completionPercentage === undefined || completionPercentage < 0 || completionPercentage > 100)
+      return res.status(400).json({ message: 'completionPercentage must be between 0 and 100' });
+
+    const project = await Project.findById(req.params.id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // Employees can only update their assigned projects; admins can always update
+    if (req.user.role === 'employee') {
+      const isAssigned = project.assignedEmployees.some(
+        ae => ae.employee.toString() === req.user._id.toString()
+      );
+      if (!isAssigned) return res.status(403).json({ message: 'You are not assigned to this project' });
+    }
+
+    project.completionPercentage = Math.round(completionPercentage);
+
+    // Auto-set status based on progress
+    if (project.completionPercentage === 100 && project.status !== 'completed') {
+      project.status = 'completed';
+    } else if (project.completionPercentage > 0 && project.status === 'planning') {
+      project.status = 'active';
+    }
+
+    await project.save();
+
+    res.json({
+      message: 'Progress updated successfully',
+      completionPercentage: project.completionPercentage,
+      status: project.status
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // DELETE /api/projects/:id — Admin only
 router.delete('/:id', protect, adminOnly, async (req, res) => {
   try {

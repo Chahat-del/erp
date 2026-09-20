@@ -62,6 +62,8 @@ export const updateProject = (id, data) =>
   api.put(`/projects/${id}`, data);
 export const updateProjectStatus = (id, data) =>
   api.patch(`/projects/${id}/status`, data);
+export const updateProjectProgress = (id, data) =>
+  api.patch(`/projects/${id}/progress`, data);
 export const deleteProject = (id) => api.delete(`/projects/${id}`);
 
 // Tasks
