@@ -4,7 +4,8 @@ import Sidebar from './Sidebar';
 import { useAuth } from '../context/AuthContext';
 import {
   Menu, LayoutDashboard, Users, FolderKanban,
-  CheckSquare, FileText, BarChart3, Building2
+  CheckSquare, FileText, BarChart3, Building2,
+  ShieldCheck, UserCog
 } from 'lucide-react';
 
 const adminBottomLinks = [
@@ -28,6 +29,7 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
   const bottomLinks = user?.role === 'admin' ? adminBottomLinks : employeeBottomLinks;
+  const basePath = user?.role === 'admin' ? '/admin' : '/employee';
 
   return (
     <div className="flex min-h-screen bg-gray-50">
@@ -52,15 +54,36 @@ export default function Layout() {
           >
             <Menu className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
             <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
               <Building2 className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="font-bold text-gray-900 text-sm">MG Solutions</span>
           </div>
+          {/* Quick access icons in top bar on mobile */}
+          <div className="flex items-center gap-1">
+            <NavLink
+              to={`${basePath}/edit-profile`}
+              className={({ isActive }) =>
+                `p-1.5 rounded-lg transition-colors ${isActive ? 'bg-purple-100 text-purple-600' : 'text-gray-400 hover:bg-gray-100'}`
+              }
+              title="Edit Profile"
+            >
+              <UserCog className="w-4 h-4" />
+            </NavLink>
+            <NavLink
+              to={`${basePath}/change-password`}
+              className={({ isActive }) =>
+                `p-1.5 rounded-lg transition-colors ${isActive ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:bg-gray-100'}`
+              }
+              title="Change Password"
+            >
+              <ShieldCheck className="w-4 h-4" />
+            </NavLink>
+          </div>
         </header>
 
-        {/* Page content */}
+        {/* Page content — extra bottom padding for mobile nav */}
         <main className="flex-1 overflow-x-hidden pb-20 lg:pb-0">
           <Outlet />
         </main>

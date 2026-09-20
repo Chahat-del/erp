@@ -6,6 +6,8 @@ import Layout from './components/Layout';
 
 // Pages
 import Login from './pages/Login';
+import ChangePassword from './pages/ChangePassword';
+import EditProfile from './pages/EditProfile';
 
 // Admin
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -60,6 +62,8 @@ function AppRoutes() {
         <Route path="tasks" element={<Tasks />} />
         <Route path="reports" element={<Reports />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="change-password" element={<ChangePassword />} />
+        <Route path="edit-profile" element={<EditProfile />} />
       </Route>
 
       {/* Employee Routes */}
@@ -73,6 +77,8 @@ function AppRoutes() {
         <Route path="tasks" element={<MyTasks />} />
         <Route path="reports" element={<DailyReports />} />
         <Route path="performance" element={<Performance />} />
+        <Route path="change-password" element={<ChangePassword />} />
+        <Route path="edit-profile" element={<EditProfile />} />
       </Route>
 
       {/* Default */}

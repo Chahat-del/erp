@@ -39,8 +39,8 @@ api.interceptors.response.use(
 // Auth
 export const login = (data) => api.post('/auth/login', data);
 export const getMe = () => api.get('/auth/me');
-export const changePassword = (data) =>
-  api.post('/auth/change-password', data);
+export const changePassword = (data) => api.post('/auth/change-password', data);
+export const updateProfile = (data) => api.put('/auth/profile', data);
 
 // Employees
 export const getEmployees = (params) => api.get('/employees', { params });
@@ -61,7 +61,7 @@ export const getProject = (id) => api.get(`/projects/${id}`);
 export const updateProject = (id, data) =>
   api.put(`/projects/${id}`, data);
 export const updateProjectStatus = (id, data) =>
-  api.patch(`/projects/${id}/status`);
+  api.patch(`/projects/${id}/status`, data);
 export const deleteProject = (id) => api.delete(`/projects/${id}`);
 
 // Tasks

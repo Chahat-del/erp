@@ -72,4 +72,35 @@ router.post('/change-password', protect, async (req, res) => {
   }
 });
 
+// PUT /api/auth/profile — logged-in user updates own profile
+router.put('/profile', protect, async (req, res) => {
+  try {
+    const { name, email, phone, department, designation } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Email uniqueness check (only if email is changing)
+    if (email && email.toLowerCase() !== user.email) {
+      const exists = await User.findOne({ email: email.toLowerCase(), _id: { $ne: user._id } });
+      if (exists) return res.status(400).json({ message: 'Email is already in use by another account' });
+      user.email = email.toLowerCase().trim();
+    }
+
+    if (name) user.name = name.trim();
+    if (phone !== undefined) user.phone = phone;
+    if (department !== undefined) user.department = department;
+    if (designation !== undefined) user.designation = designation;
+
+    await user.save();
+
+    const updated = user.toObject();
+    delete updated.password;
+
+    res.json({ message: 'Profile updated successfully', user: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

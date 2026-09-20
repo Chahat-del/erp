@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { getInitials, avatarColor } from '../utils/helpers';
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare,
-  FileText, BarChart3, LogOut, Building2, X
+  FileText, BarChart3, LogOut, Building2, X,
+  ShieldCheck, UserCog
 } from 'lucide-react';
 
 const adminLinks = [
@@ -27,6 +28,7 @@ export default function Sidebar({ open, onClose }) {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
   const links = user?.role === 'admin' ? adminLinks : employeeLinks;
+  const basePath = user?.role === 'admin' ? '/admin' : '/employee';
 
   const handleLogout = () => {
     logoutUser();
@@ -40,13 +42,9 @@ export default function Sidebar({ open, onClose }) {
     <>
       {/* Mobile overlay */}
       {open && (
-        <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={onClose} />
       )}
 
-      {/* Sidebar panel */}
       <aside
         className={`
           fixed top-0 left-0 h-full w-64 bg-gray-900 flex flex-col z-50
@@ -55,8 +53,8 @@ export default function Sidebar({ open, onClose }) {
           lg:translate-x-0 lg:static lg:z-auto
         `}
       >
-        {/* Logo + close btn */}
-        <div className="px-4 py-4 border-b border-gray-700 flex items-center justify-between">
+        {/* Logo + close */}
+        <div className="px-4 py-4 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <Building2 className="w-4 h-4 text-white" />
@@ -66,7 +64,6 @@ export default function Sidebar({ open, onClose }) {
               <p className="text-gray-400 text-xs">ERP System</p>
             </div>
           </div>
-          {/* Close button — only visible on mobile */}
           <button
             onClick={onClose}
             className="lg:hidden p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
@@ -97,8 +94,9 @@ export default function Sidebar({ open, onClose }) {
           ))}
         </nav>
 
-        {/* User + Logout */}
-        <div className="px-3 py-3 border-t border-gray-700">
+        {/* Bottom section — user info + account actions + logout */}
+        <div className="px-3 py-3 border-t border-gray-700 space-y-0.5 flex-shrink-0">
+          {/* User info */}
           <div className="flex items-center gap-3 px-3 py-2 mb-1">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${avatarColor(user?.name)}`}>
               {getInitials(user?.name)}
@@ -108,11 +106,41 @@ export default function Sidebar({ open, onClose }) {
               <p className="text-gray-400 text-xs capitalize">{user?.role}</p>
             </div>
           </div>
+
+          {/* Edit Profile (all roles) */}
+          <NavLink
+            to={`${basePath}/edit-profile`}
+            onClick={handleNav}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`
+            }
+          >
+            <UserCog className="w-4 h-4 flex-shrink-0" />
+            <span>Edit Profile</span>
+          </NavLink>
+
+          {/* Change Password (all roles) */}
+          <NavLink
+            to={`${basePath}/change-password`}
+            onClick={handleNav}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`
+            }
+          >
+            <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+            <span>Change Password</span>
+          </NavLink>
+
+          {/* Sign Out */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:bg-red-900/30 hover:text-red-400 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-400 hover:bg-red-900/30 hover:text-red-400 transition-colors"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 flex-shrink-0" />
             Sign Out
           </button>
         </div>
