@@ -17,6 +17,7 @@ import Projects from './pages/admin/Projects';
 import Tasks from './pages/admin/Tasks';
 import Reports from './pages/admin/Reports';
 import Analytics from './pages/admin/Analytics';
+import Announcements from './pages/admin/Announcements';
 
 // Employee
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
@@ -62,6 +63,7 @@ function AppRoutes() {
         <Route path="tasks" element={<Tasks />} />
         <Route path="reports" element={<Reports />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="announcements" element={<Announcements />} />
         <Route path="change-password" element={<ChangePassword />} />
         <Route path="edit-profile" element={<EditProfile />} />
       </Route>

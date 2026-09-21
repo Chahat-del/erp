@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import AnnouncementBanner from './AnnouncementBanner';
 import { useAuth } from '../context/AuthContext';
 import {
   Menu, LayoutDashboard, Users, FolderKanban,
@@ -85,6 +86,8 @@ export default function Layout() {
 
         {/* Page content — extra bottom padding for mobile nav */}
         <main className="flex-1 overflow-x-hidden pb-20 lg:pb-0">
+          {/* Announcements banner — shown to employees at top of every page */}
+          {user?.role === 'employee' && <AnnouncementBanner />}
           <Outlet />
         </main>
 

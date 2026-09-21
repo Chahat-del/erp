@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getProjects, createProject, updateProject, deleteProject, getEmployees } from '../../services/api';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { formatDate, statusColor, priorityColor } from '../../utils/helpers';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Trash2, Users, Calendar, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Users, Calendar, Search, X } from 'lucide-react';
 
 const emptyForm = {
   name: '', description: '', client: '', department: '',
@@ -23,6 +23,7 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterEmployee, setFilterEmployee] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -38,6 +39,18 @@ export default function Projects() {
   };
 
   useEffect(() => { load(); }, [search, filterStatus]);
+
+  // Client-side filter by employee (projects already have populated assignedEmployees)
+  const filteredProjects = useMemo(() => {
+    if (!filterEmployee) return projects;
+    return projects.filter(p =>
+      p.assignedEmployees?.some(ae =>
+        (ae.employee?._id || ae.employee) === filterEmployee
+      )
+    );
+  }, [projects, filterEmployee]);
+
+  const activeFiltersCount = [filterStatus, filterEmployee].filter(Boolean).length;
 
   const openAdd = () => { setEditProject(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (p) => {
@@ -92,33 +105,70 @@ export default function Projects() {
     <div className="p-4 lg:p-8">
       <PageHeader
         title="Projects"
-        subtitle={`${projects.length} projects`}
+        subtitle={filterEmployee
+          ? `${filteredProjects.length} of ${projects.length} projects`
+          : `${projects.length} projects`
+        }
         action={<button onClick={openAdd} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />New Project</button>}
       />
 
       <div className="card mb-4 lg:mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input className="input pl-9" placeholder="Search projects..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="flex flex-col gap-3">
+          {/* Row 1: search + status */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input className="input pl-9" placeholder="Search projects..." value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <select className="input sm:w-44" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="planning">Planning</option>
+              <option value="active">Active</option>
+              <option value="on-hold">On Hold</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
-          <select className="input sm:w-44" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="">All Status</option>
-            <option value="planning">Planning</option>
-            <option value="active">Active</option>
-            <option value="on-hold">On Hold</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+
+          {/* Row 2: employee filter + clear */}
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+            <div className="relative flex-1">
+              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                className="input pl-9"
+                value={filterEmployee}
+                onChange={e => setFilterEmployee(e.target.value)}
+              >
+                <option value="">All Employees</option>
+                {employees.map(emp => (
+                  <option key={emp._id} value={emp._id}>
+                    {emp.name}{emp.employeeId ? ` (${emp.employeeId})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {activeFiltersCount > 0 && (
+              <button
+                onClick={() => { setFilterStatus(''); setFilterEmployee(''); }}
+                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors whitespace-nowrap"
+              >
+                <X className="w-3.5 h-3.5" />
+                Clear filters
+                <span className="bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                  {activeFiltersCount}
+                </span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {loading ? <LoadingSpinner /> : (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {projects.length === 0 && (
+          {filteredProjects.length === 0 && (
             <div className="col-span-3 card text-center text-gray-400 py-12">No projects found</div>
           )}
-          {projects.map(p => (
+          {filteredProjects.map(p => (
             <div key={p._id} className="card hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">

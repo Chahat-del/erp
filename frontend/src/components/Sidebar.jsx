@@ -4,7 +4,7 @@ import { getInitials, avatarColor } from '../utils/helpers';
 import {
   LayoutDashboard, Users, FolderKanban, CheckSquare,
   FileText, BarChart3, LogOut, Building2, X,
-  ShieldCheck, UserCog
+  ShieldCheck, UserCog, Megaphone
 } from 'lucide-react';
 
 const adminLinks = [
@@ -14,6 +14,7 @@ const adminLinks = [
   { to: '/admin/tasks', icon: CheckSquare, label: 'Tasks' },
   { to: '/admin/reports', icon: FileText, label: 'Daily Reports' },
   { to: '/admin/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/admin/announcements', icon: Megaphone, label: 'Announcements' },
 ];
 
 const employeeLinks = [
