@@ -24,6 +24,7 @@ export default function Projects() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterEmployee, setFilterEmployee] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -40,17 +41,21 @@ export default function Projects() {
 
   useEffect(() => { load(); }, [search, filterStatus]);
 
-  // Client-side filter by employee (projects already have populated assignedEmployees)
+  // Client-side filter by employee and month
   const filteredProjects = useMemo(() => {
-    if (!filterEmployee) return projects;
-    return projects.filter(p =>
-      p.assignedEmployees?.some(ae =>
+    return projects.filter(p => {
+      if (filterEmployee && !p.assignedEmployees?.some(ae =>
         (ae.employee?._id || ae.employee) === filterEmployee
-      )
-    );
-  }, [projects, filterEmployee]);
+      )) return false;
+      if (filterMonth !== '') {
+        const deadline = p.deadline ? new Date(p.deadline).getMonth() : null;
+        if (deadline !== +filterMonth) return false;
+      }
+      return true;
+    });
+  }, [projects, filterEmployee, filterMonth]);
 
-  const activeFiltersCount = [filterStatus, filterEmployee].filter(Boolean).length;
+  const activeFiltersCount = [filterStatus, filterEmployee, filterMonth !== '' ? filterMonth : ''].filter(Boolean).length;
 
   const openAdd = () => { setEditProject(null); setForm(emptyForm); setShowModal(true); };
   const openEdit = (p) => {
@@ -113,54 +118,86 @@ export default function Projects() {
       />
 
       <div className="card mb-4 lg:mb-6">
-        <div className="flex flex-col gap-3">
-          {/* Row 1: search + status */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input className="input pl-9" placeholder="Search projects..." value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-            <select className="input sm:w-44" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="">All Status</option>
-              <option value="planning">Planning</option>
-              <option value="active">Active</option>
-              <option value="on-hold">On Hold</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="relative sm:col-span-2 lg:col-span-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              className="input pl-9"
+              placeholder="Search projects..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
           </div>
 
-          {/* Row 2: employee filter + clear */}
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-            <div className="relative flex-1">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <select
-                className="input pl-9"
-                value={filterEmployee}
-                onChange={e => setFilterEmployee(e.target.value)}
-              >
-                <option value="">All Employees</option>
-                {employees.map(emp => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.name}{emp.employeeId ? ` (${emp.employeeId})` : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {activeFiltersCount > 0 && (
-              <button
-                onClick={() => { setFilterStatus(''); setFilterEmployee(''); }}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors whitespace-nowrap"
-              >
-                <X className="w-3.5 h-3.5" />
-                Clear filters
-                <span className="bg-blue-100 text-blue-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
-                  {activeFiltersCount}
-                </span>
-              </button>
-            )}
-          </div>
+          {/* Status */}
+          <select className="input" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+            <option value="">All Status</option>
+            <option value="planning">Planning</option>
+            <option value="active">Active</option>
+            <option value="on-hold">On Hold</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+
+          {/* Employee */}
+          <select className="input" value={filterEmployee} onChange={e => setFilterEmployee(e.target.value)}>
+            <option value="">All Employees</option>
+            {employees.map(emp => (
+              <option key={emp._id} value={emp._id}>
+                {emp.name}{emp.employeeId ? ` (${emp.employeeId})` : ''}
+              </option>
+            ))}
+          </select>
+
+          {/* Month */}
+          <select className="input" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
+            <option value="">All Months</option>
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
         </div>
+
+        {/* Active filter chips */}
+        {activeFiltersCount > 0 && (
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+            <span className="text-xs text-gray-400">Active filters:</span>
+            {filterStatus && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                {filterStatus}
+                <button onClick={() => setFilterStatus('')} className="hover:text-blue-900"><X className="w-3 h-3" /></button>
+              </span>
+            )}
+            {filterEmployee && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-xs font-medium">
+                {employees.find(e => e._id === filterEmployee)?.name || 'Employee'}
+                <button onClick={() => setFilterEmployee('')} className="hover:text-purple-900"><X className="w-3 h-3" /></button>
+              </span>
+            )}
+            {filterMonth !== '' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-medium">
+                {['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+filterMonth]}
+                <button onClick={() => setFilterMonth('')} className="hover:text-green-900"><X className="w-3 h-3" /></button>
+              </span>
+            )}
+            <button
+              onClick={() => { setFilterStatus(''); setFilterEmployee(''); setFilterMonth(''); }}
+              className="ml-auto text-xs text-gray-400 hover:text-red-500 transition-colors"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {loading ? <LoadingSpinner /> : (
