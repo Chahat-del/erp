@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { getReports, createReport, updateReport, getProjects, getTasks } from '../../services/api';
+import { getReports, createReport, updateReport, getProjects, getTasks, replyToReview } from '../../services/api';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { formatDate, formatDateTime } from '../../utils/helpers';
 import toast from 'react-hot-toast';
-import { Plus, Edit2, Eye, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Eye, CheckCircle, Clock, AlertCircle, MessageSquare, Send } from 'lucide-react';
 
 const emptyForm = {
   project: '', workDescription: '', hoursWorked: '',
@@ -23,6 +23,8 @@ export default function DailyReports() {
   const [editReport, setEditReport] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replying, setReplying] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -85,8 +87,27 @@ export default function DailyReports() {
     } finally { setSaving(false); }
   };
 
-  const toggleTask = (taskId) => {
-    setForm(prev => ({
+  const handleReply = async () => {
+    if (!replyText.trim()) return;
+    setReplying(true);
+    try {
+      await replyToReview(viewModal._id, { comment: replyText.trim() });
+      toast.success('Reply submitted');
+      setReplyText('');
+      // Update the local viewModal state so it reflects immediately
+      setViewModal(prev => ({
+        ...prev,
+        employeeReply: { comment: replyText.trim(), repliedAt: new Date().toISOString() }
+      }));
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to submit reply');
+    } finally {
+      setReplying(false);
+    }
+  };
+
+  const toggleTask = (taskId) => {    setForm(prev => ({
       ...prev,
       tasksCompleted: prev.tasksCompleted.includes(taskId)
         ? prev.tasksCompleted.filter(id => id !== taskId)
@@ -165,7 +186,7 @@ export default function DailyReports() {
                   )}
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <button onClick={() => setViewModal(r)} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
+                  <button onClick={() => { setViewModal(r); setReplyText(r.employeeReply?.comment || ''); }} className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-blue-600">
                     <Eye className="w-4 h-4" />
                   </button>
                   {!r.adminReview?.reviewed && (
@@ -278,10 +299,65 @@ export default function DailyReports() {
               <p className="bg-gray-50 rounded-lg p-3 text-gray-700 whitespace-pre-wrap">{viewModal.nextDayPlan}</p>
             </div>
             {viewModal.adminReview?.reviewed && (
-              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                <p className="text-xs font-semibold text-blue-600 mb-1">Admin Review</p>
-                <p className="text-blue-700">{viewModal.adminReview.comment || 'Reviewed without comment.'}</p>
-                <p className="text-xs text-blue-400 mt-1">Reviewed at: {formatDateTime(viewModal.adminReview.reviewedAt)}</p>
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+                {/* Admin review */}
+                <div>
+                  <p className="text-xs font-semibold text-blue-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                    <CheckCircle className="w-3.5 h-3.5" /> Admin Review
+                  </p>
+                  <p className="text-blue-800 text-sm bg-blue-100/60 rounded-lg p-3 whitespace-pre-wrap">
+                    {viewModal.adminReview.comment || 'Reviewed without comment.'}
+                  </p>
+                  <p className="text-xs text-blue-400 mt-1">
+                    {formatDateTime(viewModal.adminReview.reviewedAt)}
+                  </p>
+                </div>
+
+                {/* Existing reply */}
+                {viewModal.employeeReply?.comment ? (
+                  <div>
+                    <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5" /> Your Reply
+                    </p>
+                    <p className="text-gray-700 text-sm bg-white rounded-lg p-3 border border-green-100 whitespace-pre-wrap">
+                      {viewModal.employeeReply.comment}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {formatDateTime(viewModal.employeeReply.repliedAt)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2 italic">You've already replied to this review.</p>
+                  </div>
+                ) : (
+                  /* Reply box */
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5" /> Reply to Admin
+                    </p>
+                    <textarea
+                      className="input text-sm"
+                      rows={3}
+                      placeholder="Write your reply to the admin's review..."
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={handleReply}
+                        disabled={replying || !replyText.trim()}
+                        className="btn-primary flex items-center gap-2 text-sm"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        {replying ? 'Sending...' : 'Send Reply'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {!viewModal.adminReview?.reviewed && (
+              <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-100 rounded-xl p-3 text-sm text-yellow-700">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                Waiting for admin to review this report.
               </div>
             )}
             <div className="flex justify-end">

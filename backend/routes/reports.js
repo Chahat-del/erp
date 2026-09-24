@@ -165,4 +165,31 @@ router.patch('/:id/review', protect, adminOnly, async (req, res) => {
   }
 });
 
+// PATCH /api/reports/:id/reply — Employee: reply to admin review
+router.patch('/:id/reply', protect, async (req, res) => {
+  try {
+    const { comment } = req.body;
+    if (!comment || !comment.trim())
+      return res.status(400).json({ message: 'Reply comment is required' });
+
+    const report = await DailyReport.findById(req.params.id);
+    if (!report) return res.status(404).json({ message: 'Report not found' });
+
+    // Only the report owner can reply
+    if (report.employee.toString() !== req.user._id.toString())
+      return res.status(403).json({ message: 'Access denied' });
+
+    // Can only reply once admin has reviewed
+    if (!report.adminReview?.reviewed)
+      return res.status(400).json({ message: 'Admin has not reviewed this report yet' });
+
+    report.employeeReply = { comment: comment.trim(), repliedAt: new Date() };
+    await report.save();
+
+    res.json({ message: 'Reply submitted', report });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

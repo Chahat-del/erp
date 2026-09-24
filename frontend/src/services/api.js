@@ -87,6 +87,8 @@ export const updateReport = (id, data) =>
 export const getMissingReports = () => api.get('/reports/missing');
 export const reviewReport = (id, data) =>
   api.patch(`/reports/${id}/review`, data);
+export const replyToReview = (id, data) =>
+  api.patch(`/reports/${id}/reply`, data);
 
 // Dashboard
 export const getAdminDashboard = () => api.get('/dashboard/admin');

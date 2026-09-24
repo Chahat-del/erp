@@ -52,6 +52,10 @@ const dailyReportSchema = new mongoose.Schema({
     comment: { type: String, default: '' },
     reviewedAt: { type: Date },
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  },
+  employeeReply: {
+    comment: { type: String, default: '' },
+    repliedAt: { type: Date }
   }
 }, { timestamps: true });
 

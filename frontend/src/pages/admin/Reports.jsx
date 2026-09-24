@@ -5,7 +5,7 @@ import Modal from '../../components/Modal';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import { formatDate, formatDateTime } from '../../utils/helpers';
 import toast from 'react-hot-toast';
-import { Eye, CheckCircle, AlertTriangle, Clock, Search } from 'lucide-react';
+import { Eye, CheckCircle, AlertTriangle, Clock, Search, MessageSquare } from 'lucide-react';
 
 export default function Reports() {
   const [reports, setReports] = useState([]);
@@ -152,6 +152,9 @@ export default function Reports() {
                         ? <span className="badge-green">Reviewed</span>
                         : <span className="badge-yellow flex items-center gap-1"><Clock className="w-3 h-3" />Pending</span>
                       }
+                      {r.adminReview?.reviewed && r.employeeReply?.comment && (
+                        <span className="badge-purple flex items-center gap-1"><MessageSquare className="w-3 h-3" />Replied</span>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -186,7 +189,12 @@ export default function Reports() {
                           <td className="px-4 py-3"><span className={statusBadge(r.status)}>{r.status}</span></td>
                           <td className="px-4 py-3">
                             {r.adminReview?.reviewed
-                              ? <span className="badge-green">Reviewed</span>
+                              ? <div className="flex flex-col gap-1">
+                                  <span className="badge-green w-fit">Reviewed</span>
+                                  {r.employeeReply?.comment && (
+                                    <span className="badge-purple flex items-center gap-1 w-fit"><MessageSquare className="w-3 h-3" />Replied</span>
+                                  )}
+                                </div>
                               : <span className="badge-yellow flex items-center gap-1 w-fit"><Clock className="w-3 h-3" />Pending</span>}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -235,6 +243,26 @@ export default function Reports() {
                 <p className="text-xs text-gray-400 mt-1">Last reviewed: {formatDateTime(viewReport.adminReview.reviewedAt)}</p>
               )}
             </div>
+
+            {/* Employee reply — shown after review exists */}
+            {viewReport.adminReview?.reviewed && viewReport.employeeReply?.comment && (
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+                <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  Employee Reply
+                </p>
+                <p className="text-sm text-gray-700 whitespace-pre-wrap bg-white rounded-lg p-3 border border-green-100">
+                  {viewReport.employeeReply.comment}
+                </p>
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Replied at: {formatDateTime(viewReport.employeeReply.repliedAt)}
+                </p>
+              </div>
+            )}
+            {viewReport.adminReview?.reviewed && !viewReport.employeeReply?.comment && (
+              <p className="text-xs text-gray-400 italic">Employee has not replied yet.</p>
+            )}
+
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <button onClick={() => setViewReport(null)} className="btn-secondary">Close</button>
               <button onClick={handleReview} className="btn-primary flex items-center justify-center gap-2">
